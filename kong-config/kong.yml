@@ -1,0 +1,36 @@
+_format_version: "3.0"
+
+services:
+  - name: mobility-service
+    url: http://mobility-rest:3001
+    routes:
+      - name: mobility-route
+        paths:
+          - /mobility
+
+  - name: airquality-service
+    url: http://airquality-soap:8080
+    routes:
+      - name: airquality-route
+        paths:
+          - /airquality
+    plugins:
+      - name: request-transformer
+        config:
+          add:
+            headers:
+              - Content-Type:text/xml; charset=utf-8
+              - SOAPAction:""
+
+  - name: parking-service
+    url: http://parking-graphql:3004/graphql
+    routes:
+      - name: parking-route
+        paths:
+          - /parking
+    plugins:
+      - name: request-transformer
+        config:
+          add:
+            headers:
+              - Content-Type:application/json

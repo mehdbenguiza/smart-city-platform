@@ -1,0 +1,65 @@
+services:
+  mongo:
+    image: mongo:7.0
+    container_name: smartcity-mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - ./mongo-data:/data/db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: secret123
+
+  mobility-rest:
+    build: ./services/mobility-rest
+    container_name: mobility-rest
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      MONGO_URI: mongodb://admin:secret123@mongo:27017/mobility_db?authSource=admin
+    depends_on:
+      - mongo
+
+  airquality-soap-node:
+    build: ./services/airquality-soap-node
+    container_name: airquality-soap-node
+    restart: unless-stopped
+    ports:
+      - "3002:3002"
+
+  parking-graphql:
+    build: ./services/parking-graphql
+    container_name: parking-graphql
+    restart: unless-stopped
+    ports:
+      - "3004:3004"
+    environment:
+      MONGO_URI: mongodb://admin:secret123@mongo:27017/parking_db?authSource=admin
+    depends_on:
+      - mongo
+
+  user-auth:
+    build: ./services/user-auth
+    container_name: user-auth
+    restart: unless-stopped
+    ports:
+      - "3006:3006"
+    environment:
+      MONGO_URI: mongodb://admin:secret123@mongo:27017/users_db?authSource=admin
+    depends_on:
+      - mongo
+
+  kong:
+    image: kong:3.7
+    container_name: kong-gateway
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+      - "8001:8001"
+    environment:
+      KONG_DATABASE: "off"
+      KONG_DECLARATIVE_CONFIG: /kong/declarative/kong.yml
+    volumes:
+      - ./kong-config:/kong/declarative
